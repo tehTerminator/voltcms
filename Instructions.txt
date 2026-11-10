@@ -1,0 +1,353 @@
+# Build a Lightweight Custom PHP CMS
+
+Act as a senior PHP architect. Build a secure, fast, maintainable CMS for personal publishing on shared hosting.
+
+## 1. Technology
+
+- PHP 8.2+; use features compatible with the target hosting environment.
+- MySQL/MariaDB with PDO and prepared statements.
+- HTML, CSS, vanilla JavaScript and Bootstrap 5 via CDN by default.
+- No WordPress, Grav, Laravel, Composer-heavy frameworks, Node.js build requirement, or unnecessary dependencies.
+- Keep the code modular, documented, and easy to maintain.
+
+## 2. Directory Architecture
+
+```text
+/core/
+  /admin/
+  /engine/
+  /themes/base/
+  /updates/
+/user/
+  db.php
+  /config/
+  /content/posts/{id}.html
+  /uploads/
+  /themes/
+  /backups/
+  /cache/
+  /logs/
+/index.php
+/router.php
+/install.php
+/.htaccess
+/PROJECT_STATUS.md
+/ARCHITECTURE.md
+/DATABASE_SCHEMA.md
+/INSTALLATION.md
+/TESTING.md
+/CHANGELOG.md
+```
+
+Core files may be replaced during a verified update. User content, configuration, uploads, and child themes must remain separate from core code.
+
+## 3. Content and Database
+
+Use MySQL for metadata and flat HTML files for content bodies.
+
+Support:
+- Pages, Articles, and hierarchical Book Articles.
+- Draft and Published statuses.
+- Stable IDs, slugs, titles, timestamps, SEO metadata, tags, and `parent_id`.
+- Media library with files stored on disk and paths in MySQL.
+- Per-content custom CSS and JavaScript.
+- Content revisions or recoverable backups before destructive edits.
+
+Write content files atomically. Handle missing files and orphaned records safely. Use database migrations and indexes for frequently queried fields.
+
+## 4. Routing and Publishing
+
+- Clean URLs using `.htaccess` and `router.php`.
+- Centralized route resolution with proper 404 handling.
+- Search by title, body text, tags, and keywords.
+- XML sitemap, RSS feed at `/feed.xml`, canonical URLs, meta descriptions, Open Graph tags, and configurable site name/logo.
+- Correct escaping, URL generation, pagination, and HTTP status codes.
+- Do not scan every content file on every request; use indexed metadata and a maintainable search index.
+
+## 5. Theme System
+
+Use base themes in `core/themes/base/` and child themes in `user/themes/`.
+
+Implement predictable child-theme overrides:
+1. Child theme file.
+2. Base theme file.
+3. Safe fallback.
+
+Provide `get_theme_url()` for global and template-specific CSS/JS assets. Support template variables, reusable partials, layout files, and documented theme APIs.
+
+Theme switching must not overwrite user customizations. Include a default usable theme.
+
+## 6. Blocks and Regions
+
+Provide Drupal-style regions such as header, sidebar, content, and footer.
+
+Support reusable blocks and block-type templates. Allow administrators to configure block content and placement. Never execute arbitrary PHP supplied through block settings.
+
+## 7. Admin Panel
+
+Build a responsive, straightforward admin interface with:
+- Dashboard and content CRUD.
+- Draft/publish workflow.
+- Media manager.
+- Tag management.
+- Global site settings.
+- Theme selection and child-theme management.
+- Block/region management.
+- SEO fields and custom CSS/JS fields.
+- Backup, restore, and update tools.
+
+Prioritize fast, predictable workflows over decorative complexity.
+
+## 8. Theme File Editor
+
+Provide a file browser/editor restricted to `user/themes/`.
+
+Requirements:
+- Prevent path traversal and symlink escapes.
+- Allow only explicitly approved file extensions.
+- Never expose configuration, secrets, logs, or core files for editing.
+- Validate PHP syntax before saving PHP files.
+- Create a recoverable backup or revision before each save.
+- Show clear validation errors and provide a theme-template variable reference and snippet helper.
+- Warn before editing files that may break the active theme.
+
+## 9. Security
+
+Treat security as a core requirement, not a later enhancement.
+
+Implement:
+- Password hashing using `password_hash()` and verification using `password_verify()`.
+- Secure sessions, session ID regeneration, and logout invalidation.
+- TOTP-based two-factor authentication with recovery codes.
+- CSRF protection on state-changing requests.
+- Authentication and authorization checks on every admin action.
+- PDO prepared statements, contextual output escaping, and safe HTML sanitization.
+- Upload validation using MIME inspection, extension allowlists, size limits, and randomized filenames.
+- Rate limiting for login attempts.
+- Secure cookie settings, safe error messages, and secrets outside the public web root where hosting permits.
+- Production mode with errors logged privately rather than displayed.
+- No hardcoded passwords, secret keys, or default administrator credentials.
+
+Document any security limitation imposed by shared hosting.
+
+## 10. Installer, Backups, and Updates
+
+### Installer
+`install.php` should check PHP version, extensions, directory permissions, and database connectivity; create the schema; and configure the initial administrator. Require installer removal or disablement after setup.
+
+### Backups
+Provide one-click backups of:
+- The entire `user/` directory.
+- The MySQL database as SQL.
+- A manifest containing version and backup details.
+
+Provide a documented restoration process and validate backup integrity.
+
+### Core updater
+Support verified ZIP releases while preserving `user/`.
+
+- Verify release authenticity using a documented checksum or signature mechanism.
+- Reject archive path traversal and unexpected files.
+- Stage updates before replacing the active core.
+- Back up the existing core and database as appropriate.
+- Run migrations safely and provide rollback or recovery instructions.
+- Never overwrite user content, configuration, uploads, or child themes.
+- Display progress and actionable errors.
+
+Do not claim an update is safe unless the checks actually pass.
+
+## 11. Performance and Shared Hosting
+
+Optimize for low-resource shared hosting:
+- No mandatory background workers or long-running processes.
+- Avoid unnecessary database queries and repeated file reads.
+- Add lightweight, invalidatable caching for rendered pages and expensive queries.
+- Invalidate caches when content, settings, themes, or blocks change.
+- Use pagination and indexed database queries.
+- Avoid loading admin-only code on public requests.
+- Avoid external requests during ordinary page rendering.
+- Ensure the site still works when optional caching is unavailable.
+
+## 12. Documentation and Developer Experience
+
+Create:
+- `PROJECT_STATUS.md`: completed work, current phase, known issues, next tasks, and exact files changed.
+- `ARCHITECTURE.md`: directory responsibilities and request lifecycle.
+- `DATABASE_SCHEMA.md`: tables, fields, indexes, relationships, and migrations.
+- `INSTALLATION.md`: shared-hosting deployment and configuration.
+- `TESTING.md`: manual test cases and automated tests where practical.
+- `CHANGELOG.md`: changes by version.
+- Theme development guide: inheritance, templates, variables, assets, blocks, and examples.
+
+Keep documentation updated as implementation changes.
+
+## 13. Development Rules
+
+Work incrementally. Do not generate the entire CMS in one response.
+
+Before writing code:
+1. Inspect the existing project files and hosting constraints.
+2. Propose the architecture, database schema, module boundaries, and implementation plan.
+3. Identify security risks and the minimum viable release.
+4. Wait for approval before starting implementation.
+
+Then implement one small, coherent phase at a time. For each phase:
+- List files to create or modify.
+- Provide complete file contents for new or changed files, not unexplained fragments.
+- Explain database migrations and configuration changes.
+- Test syntax and behavior where tools are available.
+- Report completed tests, failed tests, and remaining risks honestly.
+- Update `PROJECT_STATUS.md` before ending the session.
+
+Never silently change architecture, invent successful test results, leave critical placeholders, or implement duplicate functionality.
+
+## 14. Required Implementation Phases
+
+1. Project skeleton, configuration, database connection, installer, migrations, authentication.
+2. Content CRUD, file storage, routing, and publishing.
+3. Base/child theme engine and default theme.
+4. SEO, search, sitemap, RSS, and media library.
+5. Blocks, regions, and global settings.
+6. Theme editor, validation, and revisions.
+7. Backup/restore and secure core updater.
+8. Security review, performance checks, installation testing, and documentation.
+
+Keep each phase small enough to review and complete within a limited AI usage budget. Prefer a working, secure minimum viable CMS over many unfinished features.
+
+## 15. First Response
+
+Do not generate the whole application yet. Return only:
+1. Architecture proposal.
+2. Proposed database schema.
+3. Directory tree.
+4. Key security and shared-hosting decisions.
+5. Phase 1 implementation plan.
+6. Any essential questions that block implementation.
+
+## 16. Additional Architecture and Product Recommendations
+
+Apply these recommendations throughout the implementation.
+
+### A. Keep the Architecture Simple
+- Use a lightweight front controller and modular PHP classes with clear responsibilities.
+- Use Composer only if a dependency provides meaningful value; the CMS must not depend on a complex build pipeline.
+- Establish a small, consistent coding standard and naming convention.
+- Avoid premature abstractions, unnecessary design patterns, and duplicated logic.
+- Centralize configuration, database access, routing, authorization, file operations, logging, and error handling.
+- Use dependency injection where it genuinely improves testability, without building an elaborate service container.
+
+### B. Design for Portability
+- Target ordinary PHP/MySQL shared hosting with no root access.
+- Document required PHP extensions and minimum versions.
+- Do not assume cron jobs, SSH, shell access, writable system directories, or persistent background processes.
+- Provide a browser-based installation and update workflow.
+- Store secrets outside the public document root where possible. If hosting prevents this, document a secure configuration alternative.
+- Include clear diagnostics for missing extensions, database failures, and insufficient directory permissions.
+
+### C. Protect Content and Prevent Data Loss
+- Treat user content, uploads, themes, and configuration as persistent data that core updates must never overwrite.
+- Back up files before destructive changes, theme edits, migrations, and updates.
+- Use atomic writes and validate files before replacing existing versions.
+- Provide an integrity check for content records, missing body files, orphaned files, and missing media.
+- Include a documented disaster-recovery procedure.
+- Never automatically delete content files merely because their database records are missing; report them for review.
+
+### D. Make Content Management Practical
+- Support autosave or draft recovery where feasible, with clear saving status.
+- Prevent accidental loss of unsaved edits when navigating away.
+- Generate unique slugs and handle duplicate titles safely.
+- Support pagination, filtering, bulk actions, and confirmation for destructive operations.
+- Include content previews before publication.
+- Make hierarchical Book Articles easy to navigate and reorder.
+- Keep editorial metadata separate from the HTML body files.
+- Use a documented, safe HTML sanitization policy that permits normal publishing markup without allowing dangerous scripts or event handlers.
+
+### E. Use a Maintainable Theme API
+- Define and document the supported template variables and helper functions.
+- Establish clear rules for theme inheritance, template selection, asset URLs, blocks, and partials.
+- Allow themes to declare metadata such as name, version, author, and compatibility.
+- Provide a basic default theme that demonstrates every supported feature.
+- Validate theme structure before activation and provide a fallback if a theme fails.
+- Cache theme file resolution where useful, and invalidate that cache when themes change.
+- Never require theme authors to edit core files for ordinary customization.
+
+### F. Add Reliable Search and SEO
+- Begin with indexed MySQL search and simple tag filtering.
+- Do not introduce Elasticsearch or another search server.
+- If full-text search is supported, document its limitations and provide a fallback compatible with the target database.
+- Generate canonical URLs, XML sitemap entries, RSS items, and social metadata from consistent content records.
+- Exclude drafts and private content from public search, sitemap, and feeds.
+- Prevent duplicate or invalid sitemap URLs and handle deleted content correctly.
+- Allow sensible control over indexing, descriptions, and social preview images.
+
+### G. Use Safe Caching
+- Cache only data that can be invalidated reliably.
+- Invalidate relevant caches after content publication, editing, deletion, theme changes, block changes, or settings changes.
+- Avoid caching admin pages and authenticated responses publicly.
+- Ensure the site remains functional when cache storage is unavailable or unwritable.
+- Do not introduce a cache dependency that requires Redis or a separate server.
+
+### H. Improve Admin Usability
+- Use a responsive, accessible Bootstrap interface with consistent navigation, forms, validation, and notifications.
+- Include clear empty states, loading indicators, confirmation dialogs, and actionable error messages.
+- Use pagination for large content and media lists.
+- Preserve form input after validation failures where safe.
+- Make common tasks accessible with minimal clicks.
+- Keep advanced developer features separate from everyday publishing tasks.
+
+### I. Add Observability and Maintenance Tools
+- Provide a system-status page showing PHP version, database connectivity, required extensions, writable directories, CMS version, and storage usage.
+- Log errors and security-relevant events without storing passwords, session secrets, or authentication tokens.
+- Rotate or limit logs where practical to avoid exhausting shared-hosting disk space.
+- Add a maintenance mode that does not unnecessarily expose private diagnostics to visitors.
+- Provide a health check for database migrations, content files, themes, and backups.
+- Make diagnostics available without requiring command-line access.
+
+### J. Testing and Release Discipline
+- Use PHP syntax checks and automated tests where the environment supports them.
+- Test installation on a clean database and upgrade from the previous supported version.
+- Test missing files, invalid uploads, malformed requests, permission failures, duplicate slugs, and interrupted updates.
+- Test theme fallback, cache invalidation, draft privacy, and backup restoration.
+- Maintain a small regression checklist for every release.
+- Never describe an untested feature as production-ready.
+- Keep a list of known limitations and unresolved security issues.
+
+### K. Control AI Development Cost
+- Implement one small, reviewable milestone at a time.
+- Before each milestone, inspect `PROJECT_STATUS.md` and the existing implementation.
+- Avoid regenerating unchanged files or rewriting working modules without a demonstrated reason.
+- Request only the files needed for the current task.
+- Keep `PROJECT_STATUS.md` updated with the current architecture, completed tasks, file changes, tests, known issues, and next exact task.
+- Prefer focused diffs when editing existing files.
+- Do not add features outside the agreed scope without explaining their cost and asking for approval.
+- At the end of each phase, provide a concise summary and a checklist of manual tests.
+- If context or usage limits interrupt development, the status file must be sufficient to resume in a new session.
+
+### L. Define the Minimum Viable Release
+The first usable release must support:
+1. Secure administrator login.
+2. Creating, editing, previewing, publishing, and deleting content.
+3. Clean URLs and a working 404 page.
+4. Base and child themes.
+5. Global site settings.
+6. Tags and basic search.
+7. SEO metadata, sitemap, and RSS.
+8. Media uploads.
+9. Database and user-data backups.
+10. Clear installation and restoration instructions.
+
+Defer the theme code editor, TOTP recovery workflow enhancements, advanced block management, and automated core updater until the basic CMS is stable. Authentication and essential security protections must not be deferred.
+
+### M. Definition of Done
+A feature is complete only when:
+- Its implementation is present and integrated.
+- Input validation and authorization are in place.
+- Relevant success and failure paths are handled.
+- Tests or explicit manual verification steps exist.
+- Documentation is updated.
+- No critical placeholder code remains.
+- Existing functionality has not been knowingly broken.
+
+Before each release, provide a concise release checklist, known limitations, backup instructions, and upgrade/rollback steps.
+
+Then wait for my approval.

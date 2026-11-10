@@ -1,0 +1,12 @@
+{
+  "name": "Base",
+  "version": "1.0.0",
+  "author": "Custom CMS",
+  "description": "The default theme. Every other theme is a child of this one and overrides only the files it needs.",
+  "parent": null,
+  "requires": { "cms": ">=0.3.0" },
+  "assets": {
+    "css": ["css/theme.css"],
+    "js": ["js/theme.js"]
+  }
+}

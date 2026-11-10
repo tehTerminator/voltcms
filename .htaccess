@@ -1,0 +1,33 @@
+# Custom CMS front controller. Requires mod_rewrite (standard on shared hosting).
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Optional: force HTTPS. Uncomment once your certificate works.
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Never serve dotfiles (except .well-known), engine code, or private user data.
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule ^core/ - [F,L]
+    RewriteRule ^user/(config|content|backups|cache|logs)/ - [F,L]
+    RewriteRule ^user/db\.php$ - [F,L]
+
+    # Everything that is not a real file or directory goes to the front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Documentation and housekeeping files are not public.
+<FilesMatch "\.(md|sql|log|lock|bak|disabled)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -1,0 +1,7 @@
+/* Admin-only styles that Bootstrap utilities cannot express. Loaded from /admin/assets/admin.css. */
+.ac-wrap { position: relative; }
+.ac-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 1055; max-height: 18rem; overflow-y: auto; margin-top: 2px; }
+.ac-item { cursor: pointer; }
+.ac-item[aria-selected="true"] { background-color: var(--bs-primary-bg-subtle); }
+.ac-thumb { width: 36px; height: 36px; object-fit: cover; flex: none; }
+.ac-text { min-width: 0; }

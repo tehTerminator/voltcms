@@ -1,0 +1,8 @@
+/* Base theme styles. Child themes load after this file; override with the same selectors or load your own file. */
+.cms-content { max-width: 46rem; line-height: 1.7; overflow-wrap: anywhere; }
+.cms-content img, .cms-content video { max-width: 100%; height: auto; }
+.cms-content pre { overflow-x: auto; padding: .75rem 1rem; background: var(--bs-tertiary-bg); border-radius: .375rem; }
+.cms-content blockquote { border-left: .25rem solid var(--bs-border-color); padding-left: 1rem; color: var(--bs-secondary-color); }
+.cms-content table { margin-bottom: 1rem; }
+.cms-content figure { margin: 1.5rem 0; }
+.cms-content figcaption { color: var(--bs-secondary-color); font-size: .875rem; }
